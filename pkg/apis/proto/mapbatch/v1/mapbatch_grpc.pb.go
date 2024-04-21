@@ -30,7 +30,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MapBatchClient interface {
 	// MapBatchFn applies a function to mulitple elements at once
-	MapBatchFn(ctx context.Context, in *MapBatchRequest, opts ...grpc.CallOption) (MapBatch_MapBatchFnClient, error)
+	MapBatchFn(ctx context.Context, in *MapBatchRequest, opts ...grpc.CallOption) (*v1.MapResponse, error)
 	// IsReady is the heartbeat endpoint for gRPC.
 	IsReady(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*v1.ReadyResponse, error)
 }
@@ -43,36 +43,13 @@ func NewMapBatchClient(cc grpc.ClientConnInterface) MapBatchClient {
 	return &mapBatchClient{cc}
 }
 
-func (c *mapBatchClient) MapBatchFn(ctx context.Context, in *MapBatchRequest, opts ...grpc.CallOption) (MapBatch_MapBatchFnClient, error) {
-	stream, err := c.cc.NewStream(ctx, &MapBatch_ServiceDesc.Streams[0], MapBatch_MapBatchFn_FullMethodName, opts...)
+func (c *mapBatchClient) MapBatchFn(ctx context.Context, in *MapBatchRequest, opts ...grpc.CallOption) (*v1.MapResponse, error) {
+	out := new(v1.MapResponse)
+	err := c.cc.Invoke(ctx, MapBatch_MapBatchFn_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &mapBatchMapBatchFnClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type MapBatch_MapBatchFnClient interface {
-	Recv() (*v1.MapResponse, error)
-	grpc.ClientStream
-}
-
-type mapBatchMapBatchFnClient struct {
-	grpc.ClientStream
-}
-
-func (x *mapBatchMapBatchFnClient) Recv() (*v1.MapResponse, error) {
-	m := new(v1.MapResponse)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
+	return out, nil
 }
 
 func (c *mapBatchClient) IsReady(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*v1.ReadyResponse, error) {
@@ -89,7 +66,7 @@ func (c *mapBatchClient) IsReady(ctx context.Context, in *empty.Empty, opts ...g
 // for forward compatibility
 type MapBatchServer interface {
 	// MapBatchFn applies a function to mulitple elements at once
-	MapBatchFn(*MapBatchRequest, MapBatch_MapBatchFnServer) error
+	MapBatchFn(context.Context, *MapBatchRequest) (*v1.MapResponse, error)
 	// IsReady is the heartbeat endpoint for gRPC.
 	IsReady(context.Context, *empty.Empty) (*v1.ReadyResponse, error)
 	mustEmbedUnimplementedMapBatchServer()
@@ -99,8 +76,8 @@ type MapBatchServer interface {
 type UnimplementedMapBatchServer struct {
 }
 
-func (UnimplementedMapBatchServer) MapBatchFn(*MapBatchRequest, MapBatch_MapBatchFnServer) error {
-	return status.Errorf(codes.Unimplemented, "method MapBatchFn not implemented")
+func (UnimplementedMapBatchServer) MapBatchFn(context.Context, *MapBatchRequest) (*v1.MapResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MapBatchFn not implemented")
 }
 func (UnimplementedMapBatchServer) IsReady(context.Context, *empty.Empty) (*v1.ReadyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method IsReady not implemented")
@@ -118,25 +95,22 @@ func RegisterMapBatchServer(s grpc.ServiceRegistrar, srv MapBatchServer) {
 	s.RegisterService(&MapBatch_ServiceDesc, srv)
 }
 
-func _MapBatch_MapBatchFn_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(MapBatchRequest)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
+func _MapBatch_MapBatchFn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MapBatchRequest)
+	if err := dec(in); err != nil {
+		return nil, err
 	}
-	return srv.(MapBatchServer).MapBatchFn(m, &mapBatchMapBatchFnServer{stream})
-}
-
-type MapBatch_MapBatchFnServer interface {
-	Send(*v1.MapResponse) error
-	grpc.ServerStream
-}
-
-type mapBatchMapBatchFnServer struct {
-	grpc.ServerStream
-}
-
-func (x *mapBatchMapBatchFnServer) Send(m *v1.MapResponse) error {
-	return x.ServerStream.SendMsg(m)
+	if interceptor == nil {
+		return srv.(MapBatchServer).MapBatchFn(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MapBatch_MapBatchFn_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MapBatchServer).MapBatchFn(ctx, req.(*MapBatchRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _MapBatch_IsReady_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -165,16 +139,14 @@ var MapBatch_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*MapBatchServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "MapBatchFn",
+			Handler:    _MapBatch_MapBatchFn_Handler,
+		},
+		{
 			MethodName: "IsReady",
 			Handler:    _MapBatch_IsReady_Handler,
 		},
 	},
-	Streams: []grpc.StreamDesc{
-		{
-			StreamName:    "MapBatchFn",
-			Handler:       _MapBatch_MapBatchFn_Handler,
-			ServerStreams: true,
-		},
-	},
+	Streams:  []grpc.StreamDesc{},
 	Metadata: "pkg/apis/proto/mapbatch/v1/mapbatch.proto",
 }

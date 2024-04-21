@@ -11,7 +11,7 @@ package mapbatch.v1;
 
 service MapBatch {
   // MapBatchFn applies a function to mulitple elements at once
-  rpc MapBatchFn(MapBatchRequest) returns (stream map.v1.MapResponse);
+  rpc MapBatchFn(MapBatchRequest) returns (map.v1.MapResponse);
 
   // IsReady is the heartbeat endpoint for gRPC.
   rpc IsReady(google.protobuf.Empty) returns (map.v1.ReadyResponse);
