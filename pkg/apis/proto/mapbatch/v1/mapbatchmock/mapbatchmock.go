@@ -9,8 +9,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	v1 "github.com/numaproj/numaflow-go/pkg/apis/proto/map/v1"
-	v10 "github.com/numaproj/numaflow-go/pkg/apis/proto/mapbatch/v1"
+	v1 "github.com/numaproj/numaflow-go/pkg/apis/proto/mapbatch/v1"
 	grpc "google.golang.org/grpc"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
@@ -59,14 +58,14 @@ func (mr *MockMapBatchClientMockRecorder) IsReady(arg0, arg1 interface{}, arg2 .
 }
 
 // MapBatchFn mocks base method.
-func (m *MockMapBatchClient) MapBatchFn(arg0 context.Context, arg1 *v10.MapBatchRequest, arg2 ...grpc.CallOption) (*v1.MapResponse, error) {
+func (m *MockMapBatchClient) MapBatchFn(arg0 context.Context, arg1 *v1.MapBatchRequest, arg2 ...grpc.CallOption) (*v1.MapBatchResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "MapBatchFn", varargs...)
-	ret0, _ := ret[0].(*v1.MapResponse)
+	ret0, _ := ret[0].(*v1.MapBatchResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

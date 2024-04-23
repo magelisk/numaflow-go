@@ -9,7 +9,6 @@ package v1
 import (
 	context "context"
 	empty "github.com/golang/protobuf/ptypes/empty"
-	v1 "github.com/numaproj/numaflow-go/pkg/apis/proto/map/v1"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -30,9 +29,9 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MapBatchClient interface {
 	// MapBatchFn applies a function to mulitple elements at once
-	MapBatchFn(ctx context.Context, in *MapBatchRequest, opts ...grpc.CallOption) (*v1.MapResponse, error)
+	MapBatchFn(ctx context.Context, in *MapBatchRequest, opts ...grpc.CallOption) (*MapBatchResponse, error)
 	// IsReady is the heartbeat endpoint for gRPC.
-	IsReady(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*v1.ReadyResponse, error)
+	IsReady(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ReadyResponse, error)
 }
 
 type mapBatchClient struct {
@@ -43,8 +42,8 @@ func NewMapBatchClient(cc grpc.ClientConnInterface) MapBatchClient {
 	return &mapBatchClient{cc}
 }
 
-func (c *mapBatchClient) MapBatchFn(ctx context.Context, in *MapBatchRequest, opts ...grpc.CallOption) (*v1.MapResponse, error) {
-	out := new(v1.MapResponse)
+func (c *mapBatchClient) MapBatchFn(ctx context.Context, in *MapBatchRequest, opts ...grpc.CallOption) (*MapBatchResponse, error) {
+	out := new(MapBatchResponse)
 	err := c.cc.Invoke(ctx, MapBatch_MapBatchFn_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -52,8 +51,8 @@ func (c *mapBatchClient) MapBatchFn(ctx context.Context, in *MapBatchRequest, op
 	return out, nil
 }
 
-func (c *mapBatchClient) IsReady(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*v1.ReadyResponse, error) {
-	out := new(v1.ReadyResponse)
+func (c *mapBatchClient) IsReady(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ReadyResponse, error) {
+	out := new(ReadyResponse)
 	err := c.cc.Invoke(ctx, MapBatch_IsReady_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -66,9 +65,9 @@ func (c *mapBatchClient) IsReady(ctx context.Context, in *empty.Empty, opts ...g
 // for forward compatibility
 type MapBatchServer interface {
 	// MapBatchFn applies a function to mulitple elements at once
-	MapBatchFn(context.Context, *MapBatchRequest) (*v1.MapResponse, error)
+	MapBatchFn(context.Context, *MapBatchRequest) (*MapBatchResponse, error)
 	// IsReady is the heartbeat endpoint for gRPC.
-	IsReady(context.Context, *empty.Empty) (*v1.ReadyResponse, error)
+	IsReady(context.Context, *empty.Empty) (*ReadyResponse, error)
 	mustEmbedUnimplementedMapBatchServer()
 }
 
@@ -76,10 +75,10 @@ type MapBatchServer interface {
 type UnimplementedMapBatchServer struct {
 }
 
-func (UnimplementedMapBatchServer) MapBatchFn(context.Context, *MapBatchRequest) (*v1.MapResponse, error) {
+func (UnimplementedMapBatchServer) MapBatchFn(context.Context, *MapBatchRequest) (*MapBatchResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MapBatchFn not implemented")
 }
-func (UnimplementedMapBatchServer) IsReady(context.Context, *empty.Empty) (*v1.ReadyResponse, error) {
+func (UnimplementedMapBatchServer) IsReady(context.Context, *empty.Empty) (*ReadyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method IsReady not implemented")
 }
 func (UnimplementedMapBatchServer) mustEmbedUnimplementedMapBatchServer() {}
