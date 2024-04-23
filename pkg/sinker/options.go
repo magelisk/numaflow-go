@@ -1,8 +1,6 @@
 package sinker
 
-import (
-	"github.com/numaproj/numaflow-go/pkg/info"
-)
+import "os"
 
 type options struct {
 	sockAddr           string
@@ -13,11 +11,20 @@ type options struct {
 // Option is the interface to apply options.
 type Option func(*options)
 
-func DefaultOptions() *options {
+func defaultOptions() *options {
+	defaultPath := serverInfoFilePath
+	defaultAddress := address
+
+	// If the container type is fallback sink, then use the fallback sink address and path.
+	if os.Getenv(EnvUDContainerType) == UDContainerFallbackSink {
+		defaultPath = fbServerInfoFilePath
+		defaultAddress = fbAddress
+	}
+
 	return &options{
-		sockAddr:           address,
+		sockAddr:           defaultAddress,
 		maxMessageSize:     defaultMaxMessageSize,
-		serverInfoFilePath: info.ServerInfoFilePath,
+		serverInfoFilePath: defaultPath,
 	}
 }
 

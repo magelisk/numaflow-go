@@ -12,6 +12,7 @@ const (
 	uds                   = "unix"
 	address               = "/var/run/numaflow/map.sock"
 	defaultMaxMessageSize = 1024 * 1024 * 64
+	serverInfoFilePath    = "/var/run/numaflow/mapper-server-info"
 )
 
 // Service implements the proto gen server interface and contains the map operation
@@ -28,7 +29,7 @@ func (fs *Service) IsReady(context.Context, *emptypb.Empty) (*mappb.ReadyRespons
 
 // MapFn applies a user defined function to each request element and returns a list of results.
 func (fs *Service) MapFn(ctx context.Context, d *mappb.MapRequest) (*mappb.MapResponse, error) {
-	var hd = NewHandlerDatum(d.GetValue(), d.GetEventTime().AsTime(), d.GetWatermark().AsTime())
+	var hd = NewHandlerDatum(d.GetValue(), d.GetEventTime().AsTime(), d.GetWatermark().AsTime(), d.GetHeaders())
 	messages := fs.Mapper.Map(ctx, d.GetKeys(), hd)
 	var elements []*mappb.MapResponse_Result
 	for _, m := range messages.Items() {

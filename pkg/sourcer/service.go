@@ -14,6 +14,7 @@ const (
 	uds                   = "unix"
 	defaultMaxMessageSize = 1024 * 1024 * 64 // 64MB
 	address               = "/var/run/numaflow/source.sock"
+	serverInfoFilePath    = "/var/run/numaflow/sourcer-server-info"
 )
 
 // Service implements the proto gen server interface
@@ -75,6 +76,7 @@ func (fs *Service) ReadFn(d *sourcepb.ReadRequest, stream sourcepb.Source_ReadFn
 				Offset:    offset,
 				EventTime: timestamppb.New(msg.EventTime()),
 				Keys:      msg.Keys(),
+				Headers:   msg.Headers(),
 			},
 		}
 		// The error here is returned by the stream, which is already a gRPC error

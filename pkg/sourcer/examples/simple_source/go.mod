@@ -1,9 +1,12 @@
-module github.com/numaproj/numaflow-go/pkg/sourcer/examples/simple_source
+module simple_source
 
 go 1.20
 
+replace github.com/numaproj/numaflow-go => ../../../..
+
 require (
-	github.com/numaproj/numaflow-go v0.5.3-0.20231208052532-80d6321d6ee7
+	github.com/google/uuid v1.3.0
+	github.com/numaproj/numaflow-go v0.7.0-rc2
 	github.com/stretchr/testify v1.8.1
 )
 
@@ -12,7 +15,7 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/rogpeppe/go-internal v1.11.0 // indirect
+	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	golang.org/x/net v0.9.0 // indirect
 	golang.org/x/sys v0.7.0 // indirect
 	golang.org/x/text v0.9.0 // indirect

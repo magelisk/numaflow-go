@@ -12,6 +12,7 @@ const (
 	uds                   = "unix"
 	defaultMaxMessageSize = 1024 * 1024 * 64
 	address               = "/var/run/numaflow/mapstream.sock"
+	serverInfoFilePath    = "/var/run/numaflow/mapstreamer-server-info"
 )
 
 // Service implements the proto gen server interface and contains the map
@@ -29,7 +30,7 @@ func (fs *Service) IsReady(context.Context, *emptypb.Empty) (*mapstreampb.ReadyR
 
 // MapStreamFn applies a function to each request element and streams the results back.
 func (fs *Service) MapStreamFn(d *mapstreampb.MapStreamRequest, stream mapstreampb.MapStream_MapStreamFnServer) error {
-	var hd = NewHandlerDatum(d.GetValue(), d.EventTime.AsTime(), d.Watermark.AsTime())
+	var hd = NewHandlerDatum(d.GetValue(), d.GetEventTime().AsTime(), d.GetWatermark().AsTime(), d.GetHeaders())
 	ctx := stream.Context()
 	messageCh := make(chan Message)
 

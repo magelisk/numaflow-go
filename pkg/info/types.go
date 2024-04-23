@@ -1,9 +1,5 @@
 package info
 
-const (
-	ServerInfoFilePath = "/var/run/numaflow/server-info"
-)
-
 type Protocol string
 
 const (
@@ -19,10 +15,14 @@ const (
 	Java   Language = "java"
 )
 
+// MinimumNumaflowVersion specifies the minimum Numaflow version required by the current SDK version
+const MinimumNumaflowVersion = "1.2.0-rc4"
+
 // ServerInfo is the information about the server
 type ServerInfo struct {
-	Protocol Protocol          `json:"protocol"`
-	Language Language          `json:"language"`
-	Version  string            `json:"version"`
-	Metadata map[string]string `json:"metadata"`
+	Protocol               Protocol          `json:"protocol"`
+	Language               Language          `json:"language"`
+	MinimumNumaflowVersion string            `json:"minimum_numaflow_version"`
+	Version                string            `json:"version"`
+	Metadata               map[string]string `json:"metadata"`
 }

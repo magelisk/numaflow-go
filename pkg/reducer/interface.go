@@ -7,9 +7,14 @@ import (
 
 // Datum contains methods to get the payload information.
 type Datum interface {
+	// Value returns the payload of the message.
 	Value() []byte
+	// EventTime returns the event time of the message.
 	EventTime() time.Time
+	// Watermark returns the watermark of the message.
 	Watermark() time.Time
+	// Headers returns the headers of the message.
+	Headers() map[string]string
 }
 
 // Metadata contains methods to get the metadata for the reduce operation.
@@ -21,6 +26,11 @@ type Metadata interface {
 type IntervalWindow interface {
 	StartTime() time.Time
 	EndTime() time.Time
+}
+
+// Reducer is the interface of reduce function implementation.
+type Reducer interface {
+	Reduce(ctx context.Context, keys []string, inputCh <-chan Datum, md Metadata) Messages
 }
 
 // ReducerCreator is the interface which is used to create a Reducer.
@@ -42,11 +52,6 @@ func (s *simpleReducerCreator) Create() Reducer {
 // SimpleCreatorWithReduceFn creates a simple ReducerCreator for the given reduce function.
 func SimpleCreatorWithReduceFn(f func(context.Context, []string, <-chan Datum, Metadata) Messages) ReducerCreator {
 	return &simpleReducerCreator{f: f}
-}
-
-// Reducer is the interface of reduce function implementation.
-type Reducer interface {
-	Reduce(ctx context.Context, keys []string, reduceCh <-chan Datum, md Metadata) Messages
 }
 
 // reducerFn is a utility type used to convert a Reduce function to a Reducer.

@@ -57,6 +57,7 @@ func TestService_SinkFn(t *testing.T) {
 					Value:     []byte(strconv.Itoa(10)),
 					EventTime: timestamppb.New(time.Time{}),
 					Watermark: timestamppb.New(time.Time{}),
+					Headers:   map[string]string{"x-txn-id": "test-txn-1"},
 				},
 				{
 					Id:        "two-processed",
@@ -64,6 +65,7 @@ func TestService_SinkFn(t *testing.T) {
 					Value:     []byte(strconv.Itoa(20)),
 					EventTime: timestamppb.New(time.Time{}),
 					Watermark: timestamppb.New(time.Time{}),
+					Headers:   map[string]string{"x-txn-id": "test-txn-2"},
 				},
 				{
 					Id:        "three-processed",
@@ -71,6 +73,7 @@ func TestService_SinkFn(t *testing.T) {
 					Value:     []byte(strconv.Itoa(30)),
 					EventTime: timestamppb.New(time.Time{}),
 					Watermark: timestamppb.New(time.Time{}),
+					Headers:   map[string]string{"x-txn-id": "test-txn-3"},
 				},
 			},
 			sh: SinkerFunc(func(ctx context.Context, rch <-chan Datum) Responses {
@@ -83,19 +86,19 @@ func TestService_SinkFn(t *testing.T) {
 			}),
 			expected: []*sinkpb.SinkResponse_Result{
 				{
-					Success: true,
-					Id:      "one-processed",
-					ErrMsg:  "",
+					Status: sinkpb.Status_SUCCESS,
+					Id:     "one-processed",
+					ErrMsg: "",
 				},
 				{
-					Success: true,
-					Id:      "two-processed",
-					ErrMsg:  "",
+					Status: sinkpb.Status_SUCCESS,
+					Id:     "two-processed",
+					ErrMsg: "",
 				},
 				{
-					Success: true,
-					Id:      "three-processed",
-					ErrMsg:  "",
+					Status: sinkpb.Status_SUCCESS,
+					Id:     "three-processed",
+					ErrMsg: "",
 				},
 			},
 		},
@@ -109,6 +112,7 @@ func TestService_SinkFn(t *testing.T) {
 					Value:     []byte(strconv.Itoa(10)),
 					EventTime: timestamppb.New(time.Time{}),
 					Watermark: timestamppb.New(time.Time{}),
+					Headers:   map[string]string{"x-txn-id": "test-txn-1"},
 				},
 				{
 					Id:        "two-processed",
@@ -123,6 +127,7 @@ func TestService_SinkFn(t *testing.T) {
 					Value:     []byte(strconv.Itoa(30)),
 					EventTime: timestamppb.New(time.Time{}),
 					Watermark: timestamppb.New(time.Time{}),
+					Headers:   map[string]string{"x-txn-id": "test-txn-2"},
 				},
 			},
 			sh: SinkerFunc(func(ctx context.Context, rch <-chan Datum) Responses {
@@ -135,19 +140,19 @@ func TestService_SinkFn(t *testing.T) {
 			}),
 			expected: []*sinkpb.SinkResponse_Result{
 				{
-					Success: false,
-					Id:      "one-processed",
-					ErrMsg:  "unknown error",
+					Status: sinkpb.Status_FAILURE,
+					Id:     "one-processed",
+					ErrMsg: "unknown error",
 				},
 				{
-					Success: false,
-					Id:      "two-processed",
-					ErrMsg:  "unknown error",
+					Status: sinkpb.Status_FAILURE,
+					Id:     "two-processed",
+					ErrMsg: "unknown error",
 				},
 				{
-					Success: false,
-					Id:      "three-processed",
-					ErrMsg:  "unknown error",
+					Status: sinkpb.Status_FAILURE,
+					Id:     "three-processed",
+					ErrMsg: "unknown error",
 				},
 			},
 		},
