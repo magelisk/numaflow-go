@@ -25,6 +25,7 @@ const _ = grpc.SupportPackageIsVersion7
 type MapStreamClient interface {
 	// MapStreamFn applies a function to each request element and returns a stream.
 	MapStreamFn(ctx context.Context, in *MapStreamRequest, opts ...grpc.CallOption) (MapStream_MapStreamFnClient, error)
+	// MapStreamBatchFn receives a stream of messages at once and returns stream of results.
 	MapStreamBatchFn(ctx context.Context, opts ...grpc.CallOption) (MapStream_MapStreamBatchFnClient, error)
 	// IsReady is the heartbeat endpoint for gRPC.
 	IsReady(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ReadyResponse, error)
@@ -116,6 +117,7 @@ func (c *mapStreamClient) IsReady(ctx context.Context, in *emptypb.Empty, opts .
 type MapStreamServer interface {
 	// MapStreamFn applies a function to each request element and returns a stream.
 	MapStreamFn(*MapStreamRequest, MapStream_MapStreamFnServer) error
+	// MapStreamBatchFn receives a stream of messages at once and returns stream of results.
 	MapStreamBatchFn(MapStream_MapStreamBatchFnServer) error
 	// IsReady is the heartbeat endpoint for gRPC.
 	IsReady(context.Context, *emptypb.Empty) (*ReadyResponse, error)

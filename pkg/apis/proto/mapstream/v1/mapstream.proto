@@ -12,6 +12,7 @@ service MapStream {
   // MapStreamFn applies a function to each request element and returns a stream.
   rpc MapStreamFn(MapStreamRequest) returns (stream MapStreamResponse);
 
+  // MapStreamBatchFn receives a stream of messages at once and returns stream of results.
   rpc MapStreamBatchFn(stream MapStreamRequest) returns (stream MapStreamResponse);
   
   // IsReady is the heartbeat endpoint for gRPC.
@@ -40,15 +41,6 @@ message MapStreamResponse {
   }
   Result result = 1;
 }
-
-// message MapStreamResponseBatch {
-//   message Result {
-//     repeated string keys = 1;
-//     bytes value = 2;
-//     repeated string tags = 3;
-//   }
-//   repeated Result results = 1;
-// }
 
 /**
  * ReadyResponse is the health check result.
