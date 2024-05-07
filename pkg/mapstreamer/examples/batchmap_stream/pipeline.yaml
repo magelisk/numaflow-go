@@ -11,7 +11,7 @@ spec:
         generator:
           # How many messages to generate in the duration.
           rpu: 10
-          duration: 10s
+          duration: 1s
           # Optional, size of each generated message, defaults to 10.
           msgSize: 10
     - name: even-or-odd
@@ -19,7 +19,7 @@ spec:
         annotations:
           numaflow.numaproj.io/map-stream: "true"
       limits:
-        readBatchSize: 1
+        readBatchSize: 10
       scale:
         disabled: true
       # limits:

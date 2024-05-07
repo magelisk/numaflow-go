@@ -2,6 +2,9 @@ package mapstreamer
 
 import (
 	"context"
+	"io"
+	"log"
+	"sync"
 
 	"google.golang.org/protobuf/types/known/emptypb"
 
@@ -33,6 +36,8 @@ func (fs *Service) MapStreamFn(d *mapstreampb.MapStreamRequest, stream mapstream
 	var hd = NewHandlerDatum(d.GetValue(), d.GetEventTime().AsTime(), d.GetWatermark().AsTime(), d.GetHeaders())
 	ctx := stream.Context()
 	messageCh := make(chan Message)
+
+	log.Printf("MDW: I'm in MapStreamFn")
 
 	done := make(chan bool)
 	go func() {
@@ -71,75 +76,89 @@ func (fs *Service) MapStreamFn(d *mapstreampb.MapStreamRequest, stream mapstream
 	}
 }
 
-// func (fs *Service) MapStreamBatchFn(stream mapstreampb.MapStream_MapStreamBatchFnServer) error {
-// 	var (
-// 		// resultList    []*sinkpb.SinkResponse_Result  // MDW: Want the output STREAM
-// 		wg            sync.WaitGroup
-// 		datumStreamCh = make(chan Datum)
-// 		// ctx           = stream.Context()
-// 	)
+func (fs *Service) MapStreamBatchFn(stream mapstreampb.MapStream_MapStreamBatchFnServer) error {
+	log.Printf("MDW: Enter MapStreamBatchFn...")
 
-// 	go func() {
-// 		for {
-// 			d, err := stream.Recv()
-// 			if err == io.EOF {
-// 				close(datumStreamCh)
-// 				return
-// 			}
-// 			if err != nil {
-// 				close(datumStreamCh)
-// 				// TODO: research on gRPC errors and revisit the error handler
-// 				return
-// 			}
-// 			var hd = &handlerDatum{
-// 				value:     d.GetValue(),
-// 				eventTime: d.GetEventTime().AsTime(),
-// 				watermark: d.GetWatermark().AsTime(),
-// 				headers:   d.GetHeaders(),
-// 			}
-// 			datumStreamCh <- hd
-// 		}
-// 	}()
+	var (
+		// resultList    []*sinkpb.SinkResponse_Result  // MDW: Want the output STREAM
+		wg            sync.WaitGroup
+		datumStreamCh = make(chan Datum)
+		ctx           = stream.Context()
+	)
 
-// 	wg.Wait()
+	// Make call to kick off stream handling
+	messageCh := make(chan Message)
+	done := make(chan bool)
+	go func() {
+		fs.MapperStream.MapStreamBatch(ctx, datumStreamCh, messageCh)
+		done <- true
+	}()
 
-// 	// var hd = NewHandlerDatum(d.GetValue(), d.GetEventTime().AsTime(), d.GetWatermark().AsTime(), d.GetHeaders())
-// 	// ctx := stream.Context()
-// 	// messageCh := make(chan Message)
+	// Read messages and push to read channel
+	go func() {
+		for {
+			d, err := stream.Recv()
+			if err == io.EOF {
+				close(datumStreamCh)
+				log.Printf("MDW: Stream closed")
+				return
+			}
+			if err != nil {
+				close(datumStreamCh)
+				log.Printf("MDW: Error maybe -- %s", err)
+				// TODO: research on gRPC errors and revisit the error handler
+				return
+			}
+			var hd = &handlerDatum{
+				value:     d.GetValue(),
+				eventTime: d.GetEventTime().AsTime(),
+				watermark: d.GetWatermark().AsTime(),
+				headers:   d.GetHeaders(),
+			}
+			log.Printf("MDW: Send Datum")
+			datumStreamCh <- hd
+		}
+	}()
 
-// 	done := make(chan bool)
-// 	go func() {
-// 		fs.MapperStream.MapStreamBatch(ctx, d.GetKeys(), hd, messageCh)
-// 		done <- true
-// 	}()
-// 	// finished := false
-// 	// for {
-// 	// 	select {
-// 	// 	case <-done:
-// 	// 		finished = true
-// 	// 	case message, ok := <-messageCh:
-// 	// 		if !ok {
-// 	// 			// Channel already closed, not closing again.
-// 	// 			return nil
-// 	// 		}
-// 	// 		element := &mapstreampb.MapStreamResponse{
-// 	// 			Result: &mapstreampb.MapStreamResponse_Result{
-// 	// 				Keys:  message.Keys(),
-// 	// 				Value: message.Value(),
-// 	// 				Tags:  message.Tags(),
-// 	// 			},
-// 	// 		}
-// 	// 		err := stream.Send(element)
-// 	// 		// the error here is returned by stream.Send() which is already a gRPC error
-// 	// 		if err != nil {
-// 	// 			// Channel may or may not be closed, as we are not sure leave it to GC.
-// 	// 			return err
-// 	// 		}
-// 	// 	default:
-// 	// 		if finished {
-// 	// 			close(messageCh)
-// 	// 			return nil
-// 	// 		}
-// 	// 	}
-// 	// }
-// }
+	wg.Wait()
+
+	// // var hd = NewHandlerDatum(d.GetValue(), d.GetEventTime().AsTime(), d.GetWatermark().AsTime(), d.GetHeaders())
+	// // ctx := stream.Context()
+	// // messageCh := make(chan Message)
+
+	finished := false
+	for {
+		select {
+		case <-done:
+			finished = true
+		case message, ok := <-messageCh:
+			if !ok {
+				// Channel already closed, not closing again.
+				return nil
+			}
+			log.Printf("MDWR: Got message")
+			element := &mapstreampb.MapStreamResponse{
+				Result: &mapstreampb.MapStreamResponse_Result{
+					Keys:  message.Keys(),
+					Value: message.Value(),
+					Tags:  message.Tags(),
+				},
+			}
+			err := stream.Send(element)
+			// the error here is returned by stream.Send() which is already a gRPC error
+			if err != nil {
+				log.Printf("MDWR: Got error %s", err)
+				// Channel may or may not be closed, as we are not sure leave it to GC.
+				return err
+			}
+		default:
+			if finished {
+				close(messageCh)
+				return nil
+			}
+		}
+	}
+
+	log.Printf("MDW: Leaving MapStreamBatchFn...")
+	return nil
+}
