@@ -70,3 +70,76 @@ func (fs *Service) MapStreamFn(d *mapstreampb.MapStreamRequest, stream mapstream
 		}
 	}
 }
+
+// func (fs *Service) MapStreamBatchFn(stream mapstreampb.MapStream_MapStreamBatchFnServer) error {
+// 	var (
+// 		// resultList    []*sinkpb.SinkResponse_Result  // MDW: Want the output STREAM
+// 		wg            sync.WaitGroup
+// 		datumStreamCh = make(chan Datum)
+// 		// ctx           = stream.Context()
+// 	)
+
+// 	go func() {
+// 		for {
+// 			d, err := stream.Recv()
+// 			if err == io.EOF {
+// 				close(datumStreamCh)
+// 				return
+// 			}
+// 			if err != nil {
+// 				close(datumStreamCh)
+// 				// TODO: research on gRPC errors and revisit the error handler
+// 				return
+// 			}
+// 			var hd = &handlerDatum{
+// 				value:     d.GetValue(),
+// 				eventTime: d.GetEventTime().AsTime(),
+// 				watermark: d.GetWatermark().AsTime(),
+// 				headers:   d.GetHeaders(),
+// 			}
+// 			datumStreamCh <- hd
+// 		}
+// 	}()
+
+// 	wg.Wait()
+
+// 	// var hd = NewHandlerDatum(d.GetValue(), d.GetEventTime().AsTime(), d.GetWatermark().AsTime(), d.GetHeaders())
+// 	// ctx := stream.Context()
+// 	// messageCh := make(chan Message)
+
+// 	done := make(chan bool)
+// 	go func() {
+// 		fs.MapperStream.MapStreamBatch(ctx, d.GetKeys(), hd, messageCh)
+// 		done <- true
+// 	}()
+// 	// finished := false
+// 	// for {
+// 	// 	select {
+// 	// 	case <-done:
+// 	// 		finished = true
+// 	// 	case message, ok := <-messageCh:
+// 	// 		if !ok {
+// 	// 			// Channel already closed, not closing again.
+// 	// 			return nil
+// 	// 		}
+// 	// 		element := &mapstreampb.MapStreamResponse{
+// 	// 			Result: &mapstreampb.MapStreamResponse_Result{
+// 	// 				Keys:  message.Keys(),
+// 	// 				Value: message.Value(),
+// 	// 				Tags:  message.Tags(),
+// 	// 			},
+// 	// 		}
+// 	// 		err := stream.Send(element)
+// 	// 		// the error here is returned by stream.Send() which is already a gRPC error
+// 	// 		if err != nil {
+// 	// 			// Channel may or may not be closed, as we are not sure leave it to GC.
+// 	// 			return err
+// 	// 		}
+// 	// 	default:
+// 	// 		if finished {
+// 	// 			close(messageCh)
+// 	// 			return nil
+// 	// 		}
+// 	// 	}
+// 	// }
+// }
